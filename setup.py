@@ -6,5 +6,5 @@ setup(
     description='Python port of node\'s minimist module',
     author='Jarvys',
     author_email='yuhan534@126.com',
-    packages=['pypmist'],
+    py_modules=['pymist'],
 )
