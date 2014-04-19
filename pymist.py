@@ -1,11 +1,8 @@
-def parse(args, bools={}, strings={}, defaults={}):
-    import re
+import re
 
+
+def parse(args, bools=[], strings=[], defaults={}):
     result = {"_": []}
-    notFlags = None
-    if "--" in args:
-        notFlags = args[args.index("--")+1:]
-        args = args[0:args.index("--")]
 
     def setArg(key, val):
         value = parseNumber(val) if key not in strings and isNumber(val) else val
@@ -18,27 +15,25 @@ def parse(args, bools={}, strings={}, defaults={}):
         if re.match(r"^--.+=", arg):
             found = re.match(r"^--([^=]+)=(.*)$", arg)
             setArg(found.group(1), found.group(2))
-        elif re.match(r"^--.+", arg):
-            key = re.match(r"^--(.+)", arg).group(1)
+        elif re.match(r"--no-.+", arg):
+            key = re.match(r'--no-(.+)', arg).group(1)
+            setArg(key, False)
+        elif re.match(r"--.+", arg):
+            key = re.match(r"--(.+)", arg).group(1)
             next = args[i+1] if i + 1 < len(args) else None
 
             if not next:
                 setArg(key, '' if key in strings else True)
-                i = i + 1
-                continue
-
-            if re.match("^-", next):
+            elif re.match(r'-',next): 
                 setArg(key, '' if key in strings else True)
+            elif key not in bools:
+                setArg(key, next)
                 i = i + 1
-                continue
-
-            if key in bools:
+            elif re.search('^(true|false)$', next):
+                setArg(key, next == 'true')
+                i = i + 1
+            else:
                 setArg(key, True)
-                i = i + 1
-                continue
-
-            setArg(key, next)
-            i = i + 1
         elif re.match("^-[^-]+", arg):
             letters = arg[1:-1]
             broken = False
@@ -46,7 +41,7 @@ def parse(args, bools={}, strings={}, defaults={}):
             while k < len(letters):
                 next = arg[k+2:]
                 if next == '-':
-                    setArg(letters[index], next)
+                    setArg(letters[k], next)
                     k = k + 1
                     continue
 
@@ -67,8 +62,14 @@ def parse(args, bools={}, strings={}, defaults={}):
 
             key = arg[-1]
             if not broken and key != '-':
-                if i + 1 < len(args) and not re.match(r"^(-|--)", args[i+1]):
+                if i + 1 < len(args) \
+                    and not re.search(r"^(-|--)", args[i+1]) \
+                    and key not in bools:
                     setArg(key, args[i+1])
+                    i = i + 1
+                elif i + 1 < len(args) \
+                    and re.search(r'^(true|false)$', args[i+1]):
+                    setArg(key, args[i+1] == 'true')
                     i = i + 1
                 else:
                     setArg(key, '' if key in strings else True)
@@ -85,9 +86,10 @@ def parse(args, bools={}, strings={}, defaults={}):
 
 
 def isNumber(n):
-    if not isinstance(n, basestring):
-        return False
+    return isInteger(n) or isFloat(n)
 
+
+def isInteger(n):
     try:
         int(n)
         return True
@@ -95,5 +97,13 @@ def isNumber(n):
         return False
 
 
+def isFloat(n):
+    try:
+        float(n)
+        return True
+    except Exception as e:
+        return False
+
+
 def parseNumber(n):
-    return int(n)
+    return int(n) if isInteger(n) else float(n)
