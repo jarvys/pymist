@@ -7,12 +7,12 @@ pymist
 ```Python
 from pymist import parse
 
-'''
+"""
 result: {
     'a': True,
     'b': 1
 }
-'''
+"""
 parse(['-a', '-b', '1'])
 
 """
