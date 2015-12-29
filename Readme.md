@@ -1,7 +1,7 @@
 pymist
 =====
 
-> Python port of node's [minimist](github.com/substack/minimist) module
+> Python port of node's [minimist](https://github.com/substack/minimist) module
 
 ##usage
 ```Python
